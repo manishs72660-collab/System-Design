@@ -9,6 +9,7 @@ const words = ['shoes', 'phone', 'shirt', 'laptop', 'watch', 'headphones', 'bag'
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 
 export const options = {
+  summaryTrendStats: ['avg', 'p(95)', 'p(99)'],
   stages: [
     { duration: '30s', target: 100 },
     { duration: '1m', target: 200 },
@@ -17,9 +18,12 @@ export const options = {
   thresholds: {
     http_req_failed: ['rate<0.01'],
     http_req_duration: ['p(95)<500'],
+    'http_req_duration{name:list}': ['p(95)<500'],
+    'http_req_duration{name:filter}': ['p(95)<500'],
+    'http_req_duration{name:search}': ['p(95)<500'],
+    'http_req_duration{name:by_id}': ['p(95)<500'],
   },
 };
-
 export default function () {
   const r = Math.random();
   let res;
@@ -33,8 +37,11 @@ export default function () {
     );
   } else if (r < 0.8) {
     res = http.get(`${BASE}/products/search?q=${encodeURIComponent(pick(words))}&limit=20`, { tags: { name: 'search' } });
-  } else {
-    res = http.get(`${BASE}/products/${1 + Math.floor(Math.random() * 1000000)}`, { tags: { name: 'by_id' } });
+  }else {
+    const id = Math.random() < 0.8
+      ? 1 + Math.floor(Math.random() * 1000)
+      : 1 + Math.floor(Math.random() * 1000000);
+    res = http.get(`${BASE}/products/${id}`, { tags: { name: 'by_id' } });
   }
 
   check(res, { 'status 200': (r) => r.status === 200 });
